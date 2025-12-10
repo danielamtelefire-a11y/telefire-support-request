@@ -54,7 +54,7 @@
       font-size: 14px;
       transition: all 0.2s;
       font-family: inherit;
-      background: transparent;
+      background: white;
     }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
       outline: none;
@@ -62,6 +62,10 @@
       box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
     }
     .form-group textarea { resize: none; min-height: 100px; }
+    .form-group input:disabled, .form-group textarea:disabled {
+      background: #f3f4f6;
+      cursor: not-allowed;
+    }
     .upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .upload-box {
       border: 2px dashed #c41e3a;
@@ -70,11 +74,12 @@
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
-      background: transparent;
+      background: white;
     }
     .upload-box:hover { border-color: #c41e3a; background: rgba(196, 30, 58, 0.03); }
     .upload-box svg { width: 32px; height: 32px; color: #9ca3af; margin-bottom: 8px; }
     .upload-box span { font-size: 13px; color: #6b7280; display: block; }
+    .upload-box .file-name { color: #c41e3a; font-weight: 500; margin-top: 4px; }
     .upload-box input { display: none; }
     .buttons { display: flex; gap: 12px; margin-top: 24px; }
     .btn-submit {
@@ -91,6 +96,7 @@
       gap: 8px;
     }
     .btn-submit:hover { opacity: 0.9; }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-cancel {
       background: white;
       color: #374151;
@@ -102,6 +108,14 @@
     }
     .btn-cancel:hover { background: #f9fafb; }
     .footer { text-align: center; padding: 24px; color: #6b7280; font-size: 13px; }
+    .message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .message.success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+    .message.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
     @media (max-width: 768px) {
       .form-grid, .form-grid-3, .upload-grid { grid-template-columns: 1fr; }
       .form-group.full { grid-column: span 1; }
@@ -115,30 +129,31 @@
   </div>
 
   <div class="container">
-    <!-- שנה את YOUR_WEBHOOK_URL לכתובת ה-Webhook שקיבלת מ-Make -->
-    <form class="form-card" action="https://hook.eu2.make.com/434xwww29p9kike6cwn44q6ntkipkig9" method="POST">
+    <div id="message" class="message"></div>
+    
+    <form class="form-card" id="supportForm">
       <div class="section">
         <h2 class="section-title">פרטי הלקוח</h2>
         <div class="form-grid">
           <div class="form-group">
             <label>מספר לקוח</label>
-            <input type="text" name="customerNumber">
+            <input type="text" name="customerNumber" id="customerNumber">
           </div>
           <div class="form-group">
             <label>שם הלקוח *</label>
-            <input type="text" name="customerName" required>
+            <input type="text" name="customerName" id="customerName" required>
           </div>
           <div class="form-group">
             <label>שם החברה</label>
-            <input type="text" name="companyName">
+            <input type="text" name="companyName" id="companyName">
           </div>
           <div class="form-group">
             <label>טלפון *</label>
-            <input type="tel" name="phone" required>
+            <input type="tel" name="phone" id="phone" required>
           </div>
           <div class="form-group full">
             <label>מייל *</label>
-            <input type="email" name="email" required>
+            <input type="email" name="email" id="email" required>
           </div>
         </div>
       </div>
@@ -147,16 +162,24 @@
         <h2 class="section-title">פרטי המוצר</h2>
         <div class="form-grid-3">
           <div class="form-group">
-            <label>שם המוצר *</label>
-            <input type="text" name="productName" required>
+            <label>סוג מערכת *</label>
+            <select name="systemType" id="systemType" required>
+              <option value="">בחר סוג מערכת</option>
+            </select>
           </div>
           <div class="form-group">
-            <label>מק"ט</label>
-            <input type="text" name="sku">
+            <label>שם מוצר *</label>
+            <select name="productName" id="productName" required disabled>
+              <option value="">בחר תחילה סוג מערכת</option>
+            </select>
           </div>
           <div class="form-group">
             <label>מספר אצוות / סריאלי *</label>
-            <input type="text" name="serialNumber" required>
+            <input type="text" name="serialNumber" id="serialNumber" required>
+          </div>
+          <div class="form-group full">
+            <label>תיאור מוצר</label>
+            <textarea name="productDescription" id="productDescription" disabled></textarea>
           </div>
         </div>
       </div>
@@ -166,7 +189,7 @@
         <div class="form-grid">
           <div class="form-group">
             <label>סוג התקלה *</label>
-            <select name="faultType" required>
+            <select name="faultType" id="faultType" required>
               <option value="">בחר סוג תקלה</option>
               <option value="hardware">תקלת חומרה</option>
               <option value="software">תקלת תוכנה</option>
@@ -177,11 +200,11 @@
           </div>
           <div class="form-group">
             <label>מועד גילוי</label>
-            <input type="date" name="discoveryDate">
+            <input type="date" name="discoveryDate" id="discoveryDate">
           </div>
           <div class="form-group full">
             <label>עדיפות</label>
-            <select name="priority">
+            <select name="priority" id="priority">
               <option value="low">נמוכה</option>
               <option value="medium" selected>בינונית</option>
               <option value="high">גבוהה</option>
@@ -190,7 +213,7 @@
           </div>
           <div class="form-group full">
             <label>תיאור מפורט *</label>
-            <textarea name="description" placeholder="תאר את התקלה בפירוט..." required></textarea>
+            <textarea name="description" id="description" placeholder="תאר את התקלה בפירוט..." required></textarea>
           </div>
         </div>
       </div>
@@ -198,35 +221,35 @@
       <div class="section">
         <h2 class="section-title">תמונות והוכחות</h2>
         <div class="upload-grid">
-          <label class="upload-box">
+          <label class="upload-box" id="uploadBox1">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
             </svg>
             <span>תמונת תקריב *</span>
             <span class="file-name"></span>
-            <input type="file" accept="image/*" onchange="this.parentElement.querySelector('.file-name').textContent = this.files[0]?.name || ''">
+            <input type="file" accept="image/*" id="image1" required>
           </label>
-          <label class="upload-box">
+          <label class="upload-box" id="uploadBox2">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
             </svg>
             <span>תמונה כללית *</span>
             <span class="file-name"></span>
-            <input type="file" accept="image/*" onchange="this.parentElement.querySelector('.file-name').textContent = this.files[0]?.name || ''">
+            <input type="file" accept="image/*" id="image2" required>
           </label>
-          <label class="upload-box">
+          <label class="upload-box" id="uploadBox3">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
             </svg>
             <span>תמונת תווית האצוות *</span>
             <span class="file-name"></span>
-            <input type="file" accept="image/*" onchange="this.parentElement.querySelector('.file-name').textContent = this.files[0]?.name || ''">
+            <input type="file" accept="image/*" id="image3" required>
           </label>
         </div>
       </div>
 
       <div class="buttons">
-        <button type="submit" class="btn-submit">
+        <button type="submit" class="btn-submit" id="submitBtn">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
           </svg>
@@ -237,5 +260,220 @@
     </form>
     <div class="footer">© 2024 Telefire - כל הזכויות שמורות</div>
   </div>
+
+  <script>
+    // נתוני המוצרים - ההיררכיה מהטבלה
+    const productsData = {
+      "רכזות אנלוגיות": {
+        "GUARD-7": "רכזת אנלוגית ל-60 כתובות",
+        "GUARD-V": "רכזת אנלוגית 60 כתובות משולבת כריזה 50 אווט",
+        "SAVER-7000": "רכזת אנלוגית סייבר",
+        "ADR-7000": "רכזת כתובתית אנלוגית ADR"
+      },
+      "פנל משנה": {
+        "RM-7000": "לוח משנה לרכזות מסדרת 7000"
+      },
+      "גלאים": {
+        "TFO-480A": "גלאי פוטואלקטרי ממוען כתובתי",
+        "TFH-280A": "גלאי חום ממוען כתובתי",
+        "TFO-480": "גלאי פוטואלקטרי",
+        "TFB-180": "בסיס לגלאי רגיל + כתובתי"
+      },
+      "לחצנים": {
+        "TPB-800ASR": "לחצן ניפוץ כתובתי אדום",
+        "TPB-800ASY": "לחצן ניפוץ כתובתי צהוב"
+      },
+      "כרטיסים אנלוגים": {
+        "ADR-705": "מעגל מבוא כפול למפסקי זרימה + קופסת חיבורים",
+        "ADR-805A": "מעגל מבוא למפסקי זרימה + קופסת חיבורים",
+        "ADR-712": "מעגל מבוא דו ערוצי כתובתי מבודד גלווני + קופסת חיבורים",
+        "ADR-718": "מעגל מבוא 8 ערוצים כתובתי מבודד גלווני + קופסת חיבורים",
+        "ADR-723": "מעגל מבוא/מוצא כתובתי תלת ערוצי מבודד גלווני + קופסת חיבורים",
+        "ADR-741": "מעגל ממסר כתובתי + קופסת חיבורים"
+      },
+      "רכזות איזוריות": {
+        "TSA-200": "רכזת דו אזורית לגילוי אש",
+        "TSA-200XT": "רכזת דו אזורית לגילוי אש + כיבוי",
+        "TSA-240": "רכזת לארבעה אזורים ללא כיבוי",
+        "TSA-240XT": "רכזת לארבעה אזורים גילוי אש + כיבוי",
+        "TSA-1000": "רכזת מסדרת 1000"
+      },
+      "חייגנים": {
+        "TDM-500IN": "חייגן קווי בעל בקרת קו טלפון",
+        "TDM-500ICN": "חייגן סלולרי"
+      },
+      "טלפון כבאים": {
+        "TFP-7000": "עמדת שליטה לטלפון כבאים",
+        "TFP-806": "מכלול שקע כתובתי לטלפון כבאים"
+      },
+      "כריזה חירום 1220": {
+        "TFEVS-1300": "רכזת כריזת חירום משולבת 40 וואט",
+        "TFEVS-6400": "רכזת כריזת חירום משולבת 250 וואט (6 אזורים, 6 הודעות)",
+        "TFMIC-30PKM": "מיקרופון חירום בקופסא"
+      },
+      "שיחרור עשן": {
+        "TFSR-10-20": "רכזת שחרור עשן 10-20 מנועים"
+      }
+    };
+
+    // אתחול תפריט סוג מערכת
+    const systemTypeSelect = document.getElementById('systemType');
+    const productNameSelect = document.getElementById('productName');
+    const productDescriptionTextarea = document.getElementById('productDescription');
+
+    // מילוי סוגי מערכת
+    Object.keys(productsData).forEach(systemType => {
+      const option = document.createElement('option');
+      option.value = systemType;
+      option.textContent = systemType;
+      systemTypeSelect.appendChild(option);
+    });
+
+    // עדכון תפריט מוצרים לפי סוג מערכת
+    systemTypeSelect.addEventListener('change', function() {
+      const selectedSystem = this.value;
+      productNameSelect.innerHTML = '<option value="">בחר מוצר</option>';
+      productDescriptionTextarea.value = '';
+      
+      if (selectedSystem) {
+        productNameSelect.disabled = false;
+        const products = productsData[selectedSystem];
+        
+        Object.keys(products).forEach(productName => {
+          const option = document.createElement('option');
+          option.value = productName;
+          option.textContent = productName;
+          productNameSelect.appendChild(option);
+        });
+      } else {
+        productNameSelect.disabled = true;
+        productDescriptionTextarea.disabled = true;
+      }
+    });
+
+    // עדכון תיאור מוצר אוטומטית
+    productNameSelect.addEventListener('change', function() {
+      const selectedSystem = systemTypeSelect.value;
+      const selectedProduct = this.value;
+      
+      if (selectedSystem && selectedProduct) {
+        productDescriptionTextarea.value = productsData[selectedSystem][selectedProduct];
+        productDescriptionTextarea.disabled = false;
+      } else {
+        productDescriptionTextarea.value = '';
+        productDescriptionTextarea.disabled = true;
+      }
+    });
+
+    // עדכון שמות קבצים
+    document.querySelectorAll('.upload-box input[type="file"]').forEach(input => {
+      input.addEventListener('change', function() {
+        const fileName = this.files[0]?.name || '';
+        this.parentElement.querySelector('.file-name').textContent = fileName;
+      });
+    });
+
+    // המרת קובץ ל-Base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // הצגת הודעה
+    function showMessage(text, type) {
+      const messageDiv = document.getElementById('message');
+      messageDiv.textContent = text;
+      messageDiv.className = `message ${type}`;
+      messageDiv.style.display = 'block';
+      
+      setTimeout(() => {
+        messageDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    // שליחת הטופס
+    document.getElementById('supportForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'שולח...';
+
+      try {
+        // קריאת התמונות
+        const image1 = document.getElementById('image1').files[0];
+        const image2 = document.getElementById('image2').files[0];
+        const image3 = document.getElementById('image3').files[0];
+
+        const [image1Base64, image2Base64, image3Base64] = await Promise.all([
+          fileToBase64(image1),
+          fileToBase64(image2),
+          fileToBase64(image3)
+        ]);
+
+        // הכנת הנתונים
+        const formData = {
+          customerNumber: document.getElementById('customerNumber').value,
+          customerName: document.getElementById('customerName').value,
+          companyName: document.getElementById('companyName').value,
+          phone: document.getElementById('phone').value,
+          email: document.getElementById('email').value,
+          systemType: document.getElementById('systemType').value,
+          productName: document.getElementById('productName').value,
+          productDescription: document.getElementById('productDescription').value,
+          serialNumber: document.getElementById('serialNumber').value,
+          faultType: document.getElementById('faultType').value,
+          discoveryDate: document.getElementById('discoveryDate').value,
+          priority: document.getElementById('priority').value,
+          description: document.getElementById('description').value,
+          image1: {
+            name: image1.name,
+            data: image1Base64
+          },
+          image2: {
+            name: image2.name,
+            data: image2Base64
+          },
+          image3: {
+            name: image3.name,
+            data: image3Base64
+          }
+        };
+
+        // שליחה ל-webhook
+        const response = await fetch('https://hook.eu2.make.com/434xwww29p9kike6cwn44q6ntkipkig9', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          showMessage('הדיווח נשלח בהצלחה! נחזור אליך בהקדם.', 'success');
+          this.reset();
+          productNameSelect.disabled = true;
+          productDescriptionTextarea.disabled = true;
+        } else {
+          throw new Error('שגיאה בשליחה');
+        }
+      } catch (error) {
+        showMessage('אירעה שגיאה בשליחת הדיווח. אנא נסה שנית.', 'error');
+        console.error('Error:', error);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+          שלח דיווח
+        `;
+      }
+    });
+  </script>
 </body>
 </html>
