@@ -404,16 +404,15 @@
       submitBtn.textContent = 'שולח...';
 
       try {
-        // קריאת התמונות
-        const image1 = document.getElementById('image1').files[0];
-        const image2 = document.getElementById('image2').files[0];
-        const image3 = document.getElementById('image3').files[0];
+        // קריאת התמונות (רק אם הועלו)
+        const image1File = document.getElementById('image1').files[0];
+        const image2File = document.getElementById('image2').files[0];
+        const image3File = document.getElementById('image3').files[0];
 
-        const [image1Base64, image2Base64, image3Base64] = await Promise.all([
-          fileToBase64(image1),
-          fileToBase64(image2),
-          fileToBase64(image3)
-        ]);
+        // המרה ל-Base64 רק אם הקובץ קיים
+        const image1Base64 = image1File ? await fileToBase64(image1File) : null;
+        const image2Base64 = image2File ? await fileToBase64(image2File) : null;
+        const image3Base64 = image3File ? await fileToBase64(image3File) : null;
 
         // הכנת הנתונים
         const formData = {
@@ -430,18 +429,18 @@
           discoveryDate: document.getElementById('discoveryDate').value,
           priority: document.getElementById('priority').value,
           description: document.getElementById('description').value,
-          image1: {
-            name: image1.name,
+          image1: image1File ? {
+            name: image1File.name,
             data: image1Base64
-          },
-          image2: {
-            name: image2.name,
+          } : null,
+          image2: image2File ? {
+            name: image2File.name,
             data: image2Base64
-          },
-          image3: {
-            name: image3.name,
+          } : null,
+          image3: image3File ? {
+            name: image3File.name,
             data: image3Base64
-          }
+          } : null
         };
 
         // שליחה ל-webhook
